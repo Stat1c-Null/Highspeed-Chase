@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
     [SerializeField] private TMP_Text highScoreText;
     [SerializeField] private TMP_Text energyText;
+    [SerializeField] private Button playButton;
     [SerializeField] private AndroidNotificationsHandler androidNotificationsHandler;
+    [SerializeField] private IOSNotificationHandler iosNotificationsHandler;
     [SerializeField] private int maxEnergy;
     [SerializeField] private int energyRecharge;
 
@@ -19,6 +22,15 @@ public class MainMenu : MonoBehaviour
 
     private void Start()
     {
+        OnApplicationFocus(true);
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if(!hasFocus) {return;}
+
+        CancelInvoke();
+
         int highScore = PlayerPrefs.GetInt(ScoreSystem.HighScoreKey, 0);
         highScoreText.text = $"High Score: {highScore}";
         //Let player play only if they have energy
@@ -36,8 +48,18 @@ public class MainMenu : MonoBehaviour
             {
                 energy = maxEnergy;
                 PlayerPrefs.SetInt(EnergyKey, energy);
+            } else {
+                playButton.interactable = false;
+                Invoke(nameof(EnergyRecharged) ,(energyReady - System.DateTime.Now).Seconds);
             }
         }
+        energyText.text = $"Energy Left : {energy} ";
+    }
+    private void EnergyRecharged()
+    {
+        playButton.interactable = true;
+        energy = maxEnergy;
+        PlayerPrefs.SetInt(EnergyKey, energy);
         energyText.text = $"Energy Left : {energy} ";
     }
 
@@ -54,8 +76,11 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetString(EnergyReadyKey, energyReady.ToString());
             if (energy == maxEnergy)
             {
+                //Show a notifications when energy is fully restored
 #if UNITY_ANDROID
                 androidNotificationsHandler.ScheduleNotification(energyReady);
+#elif UNITY_IOS
+                iosNotificationsHandler.ScheduleNotification(energyRecharge);
 #endif
             }
         }
