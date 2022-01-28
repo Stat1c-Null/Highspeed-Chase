@@ -44,16 +44,26 @@ public class Car : MonoBehaviour
         if (health <= 0) 
         {
             SceneManager.LoadScene("MainMenuScene");
+        } else if(health > maxHealth) 
+        {
+            health = maxHealth;
         }
     }
 
-    //Check for collision with obstacles
+    //Check for collision with obstacles and health pick up
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Obstacle"))
         {
             health -= collisionDamage;
             Destroy(other.gameObject);
+        } else if(other.CompareTag("Health") && health < maxHealth)
+        {
+            health += 50;
+            Destroy(other.gameObject);
+        //Insta kill player if he touches end wall
+        } else if(other.CompareTag("EndWall")) {
+            SceneManager.LoadScene("MainMenuScene");
         }
     }
 
