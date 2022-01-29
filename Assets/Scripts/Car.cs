@@ -13,9 +13,15 @@ public class Car : MonoBehaviour
     [SerializeField] private float turnSpeed = 200f;
     public float health = 50f;
     public float maxHealth = 100f;
+    public float healthRestore = 50f;
     public float collisionDamage = 25f;
+    public float gas = 100f;
+    public float maxGas = 100f;
+    public float gasRestore = 20f;
+    private float gasConsume;
     [Header("UI Element")]
     [SerializeField] private Image healthFrontUI = null;
+    [SerializeField] private Image gasFrontUI = null;
 
     private int steerValue;
 
@@ -34,23 +40,33 @@ public class Car : MonoBehaviour
         //Steer the car
         transform.Rotate(0f, steerValue * turnSpeed * Time.deltaTime, 0f);
 
-        //Move Car Forward
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        //Consume Gas
+        float gasConsume = Random.Range(0.5f, 1.5f);
+        gas = gas - gasConsume * Time.deltaTime; 
 
-        //Update health UI
-        UpdateHealthUI();
+        //Move Car Forward if player has gas
+        if(gas > 0) 
+        {
+            transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        }
+        
 
-        //Check if player died
+        //Update UI
+        UpdateUI();
+
+        //Check if player died or has too much gas
         if (health <= 0) 
         {
             SceneManager.LoadScene("MainMenuScene");
         } else if(health > maxHealth) 
         {
             health = maxHealth;
+        } else if(gas > maxGas) {
+            gas = maxGas;
         }
     }
 
-    //Check for collision with obstacles and health pick up
+    //Check for collision with obstacles, health , gas pick up
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Obstacle"))
@@ -59,11 +75,16 @@ public class Car : MonoBehaviour
             Destroy(other.gameObject);
         } else if(other.CompareTag("Health") && health < maxHealth)
         {
-            health += 50;
+            health += healthRestore;
             Destroy(other.gameObject);
         //Insta kill player if he touches end wall
         } else if(other.CompareTag("EndWall")) {
             SceneManager.LoadScene("MainMenuScene");
+        }
+        //Regen gas
+        else if(other.CompareTag("Gas") && gas < maxGas) {
+            gas += gasRestore;
+            Destroy(other.gameObject);
         }
     }
 
@@ -72,8 +93,9 @@ public class Car : MonoBehaviour
         steerValue = value; 
     }
 
-    void UpdateHealthUI()
+    void UpdateUI()
     {
         healthFrontUI.fillAmount = health / maxHealth;
+        gasFrontUI.fillAmount = gas / maxGas;
     }
 }
