@@ -9,7 +9,8 @@ public class Car : MonoBehaviour
     [Header("Car Values")]
     [SerializeField] private float speed = 100f;
     [SerializeField] private float maxSpeed = 100f;
-    [SerializeField] private float speedGain = 0.2f;
+    [SerializeField] private float speedGain = 0.7f;
+    [SerializeField] private float lowGasSpeedGain = 0.3f;
     [SerializeField] private float turnSpeed = 200f;
     public float health = 50f;
     public float maxHealth = 100f;
@@ -18,6 +19,9 @@ public class Car : MonoBehaviour
     public float gas = 100f;
     public float maxGas = 100f;
     public float gasRestore = 20f;
+    [Header("Min and Max gas consumption")]
+    public float minGasConsume = 1.5f;
+    public float maxGasConsume = 3.5f;
     private float gasConsume;
     [Header("UI Element")]
     [SerializeField] private Image healthFrontUI = null;
@@ -29,10 +33,19 @@ public class Car : MonoBehaviour
     void Update()
     {
         //Increase speed with every frame until it reaches max
-        if(speed < maxSpeed)
+        if(speed < maxSpeed && gas > 50)
         {
             speed += speedGain * Time.deltaTime;
-        } else {
+        } else if(speed < maxSpeed && gas < 25) //Slow player down if he is starting to run out of gas
+        {
+            speed += lowGasSpeedGain * Time.deltaTime;
+        } 
+        else if(speed < maxSpeed && gas < 10) //Decrease player speed if their gas is really bad
+        {
+            speed -= lowGasSpeedGain * Time.deltaTime;
+        } 
+        else if(speed > maxSpeed && gas > 50)
+        {
             speed = maxSpeed;
         }
         
@@ -41,14 +54,14 @@ public class Car : MonoBehaviour
         transform.Rotate(0f, steerValue * turnSpeed * Time.deltaTime, 0f);
 
         //Consume Gas
-        float gasConsume = Random.Range(0.5f, 1.5f);
+        float gasConsume = Random.Range(minGasConsume, maxGasConsume);
         gas = gas - gasConsume * Time.deltaTime; 
 
         //Move Car Forward if player has gas
         if(gas > 0) 
         {
             transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
+        } 
         
 
         //Update UI
@@ -72,6 +85,7 @@ public class Car : MonoBehaviour
         if (other.CompareTag("Obstacle"))
         {
             health -= collisionDamage;
+            speed -= 6;
             Destroy(other.gameObject);
         } else if(other.CompareTag("Health") && health < maxHealth)
         {
