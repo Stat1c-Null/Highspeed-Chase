@@ -19,6 +19,8 @@ public class Car : MonoBehaviour
     public float gas = 100f;
     public float maxGas = 100f;
     public float gasRestore = 20f;
+    public float speedDecrease = 4f;
+    public GameObject UISystem;
     [Header("Min and Max gas consumption")]
     public float minGasConsume = 1.5f;
     public float maxGasConsume = 3.5f;
@@ -85,7 +87,7 @@ public class Car : MonoBehaviour
         if (other.CompareTag("Obstacle"))
         {
             health -= collisionDamage;
-            speed -= 6;
+            speed -= speedDecrease;
             Destroy(other.gameObject);
         } else if(other.CompareTag("Health") && health < maxHealth)
         {
@@ -98,6 +100,12 @@ public class Car : MonoBehaviour
         //Regen gas
         else if(other.CompareTag("Gas") && gas < maxGas) {
             gas += gasRestore;
+            Destroy(other.gameObject);
+        }
+        //Give money
+        else if(other.CompareTag("Money"))
+        {
+            UISystem.GetComponent<ScoreSystem>().hitMoney = true;
             Destroy(other.gameObject);
         }
     }
